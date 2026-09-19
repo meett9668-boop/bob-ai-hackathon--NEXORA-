@@ -1,19 +1,24 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
-import { PageHeader } from '../../components/PageHeader';
-import { Btn } from '../../components/PageHeader';
 import { addComplaint, addNotification } from '../../store/nexoraStore';
 
+const C = {
+  bg: '#F8FAFC',
+  surface: '#FFFFFF',
+  border: '#E2E8F0',
+  text: '#1E293B',
+  muted: '#64748B',
+  primary: '#3B82F6',
+  success: '#22C55E',
+  warning: '#F59E0B',
+  danger: '#EF4444',
+};
+
 const PROBLEM_TYPES = [
-  'Power Outage',
-  'Flickering Lights',
-  'No Power to Partial Area',
-  'Sparking / Arcing',
-  'Burning Smell',
-  'Transformer Noise',
-  'Fallen Power Line',
-  'Other',
+  'Power Outage', 'Flickering Lights', 'No Power to Partial Area',
+  'Sparking / Arcing', 'Burning Smell', 'Transformer Noise',
+  'Fallen Power Line', 'Other',
 ] as const;
 
 const TRANSFORMER_MAP: Record<string, string> = {
@@ -23,36 +28,23 @@ const TRANSFORMER_MAP: Record<string, string> = {
 
 const ADMIN_USER_IDS = ['usr-admin-001'];
 
-const glass: React.CSSProperties = {
-  background: 'rgba(8,20,40,0.7)',
-  border: '1px solid rgba(56,189,248,0.12)',
-  borderRadius: 14,
-  backdropFilter: 'blur(10px)',
-  WebkitBackdropFilter: 'blur(10px)',
-  padding: '1.6rem 1.8rem',
+const card: React.CSSProperties = {
+  background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12,
+  padding: '28px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
 };
 
 const inputStyle: React.CSSProperties = {
-  width: '100%',
-  background: 'rgba(3,11,24,0.7)',
-  border: '1px solid rgba(56,189,248,0.15)',
-  borderRadius: 9,
-  color: '#e2e8f0',
-  padding: '0.65rem 1rem',
-  fontSize: 14,
-  outline: 'none',
-  boxSizing: 'border-box',
-  fontFamily: '-apple-system, "Segoe UI", system-ui, sans-serif',
+  width: '100%', background: C.surface,
+  border: `1px solid ${C.border}`, borderRadius: 8,
+  color: C.text, padding: '10px 14px', fontSize: 14,
+  outline: 'none', boxSizing: 'border-box',
+  fontFamily: 'Inter, system-ui, sans-serif',
+  transition: 'border-color 0.15s',
 };
 
 const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontSize: 12,
-  color: '#94a3b8',
-  marginBottom: 6,
-  fontWeight: 500,
-  letterSpacing: '0.04em',
-  textTransform: 'uppercase',
+  display: 'block', fontSize: 12, color: C.muted,
+  marginBottom: 6, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase',
 };
 
 export default function ComplaintForm() {
@@ -96,18 +88,14 @@ export default function ComplaintForm() {
         createdAt: now,
         updatedAt: now,
         linkedTransformerId: currentUser.region ? TRANSFORMER_MAP[currentUser.region] : undefined,
-        timeline: [
-          {
-            timestamp: now,
-            status: 'OPEN',
-            message: `Complaint submitted by ${currentUser.name}. Problem type: ${problemType}.`,
-            actor: currentUser.name,
-          },
-        ],
+        timeline: [{
+          timestamp: now,
+          status: 'OPEN',
+          message: `Complaint submitted by ${currentUser.name}. Problem type: ${problemType}.`,
+          actor: currentUser.name,
+        }],
         photoUrl: photoB64,
       });
-
-      // Notify all admins
       for (const adminId of ADMIN_USER_IDS) {
         addNotification({
           userId: adminId,
@@ -118,7 +106,6 @@ export default function ComplaintForm() {
           relatedEntityId: complaint.id,
         });
       }
-
       setSubmitting(false);
       setSubmitted({ id: complaint.id });
     }, 800);
@@ -126,45 +113,57 @@ export default function ComplaintForm() {
 
   if (submitted) {
     return (
-      <div style={{ padding: '2rem', maxWidth: 600, margin: '0 auto' }}>
-        <div style={{ ...glass, textAlign: 'center' }}>
-          <div style={{ fontSize: 48, marginBottom: '1rem' }}>✅</div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: '#4ade80', marginBottom: '0.5rem' }}>
-            Complaint Submitted!
-          </div>
-          <div style={{ fontSize: 14, color: '#94a3b8', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+      <div style={{ padding: '28px 32px', fontFamily: 'Inter, system-ui, sans-serif', maxWidth: 600 }}>
+        <div style={{ ...card, textAlign: 'center' }}>
+          <div style={{ width: 64, height: 64, background: '#DCFCE7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: 28 }}>✅</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: C.text, marginBottom: 8 }}>Complaint Submitted!</div>
+          <div style={{ fontSize: 14, color: C.muted, marginBottom: 24, lineHeight: 1.6 }}>
             Your complaint has been received. Our team will review it shortly.
           </div>
-          <div style={{
-            background: 'rgba(56,189,248,0.08)',
-            border: '1px solid rgba(56,189,248,0.2)',
-            borderRadius: 10,
-            padding: '1rem',
-            marginBottom: '1.5rem',
-          }}>
-            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Complaint ID</div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: '#38bdf8', fontFamily: 'monospace' }}>{submitted.id}</div>
-            <div style={{ fontSize: 11, color: '#4ade80', marginTop: 6 }}>STATUS: OPEN</div>
+          <div style={{ background: '#EFF6FF', border: `1px solid #BFDBFE`, borderRadius: 10, padding: '16px', marginBottom: 24 }}>
+            <div style={{ fontSize: 12, color: C.muted, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Complaint ID</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: C.primary, fontFamily: 'monospace' }}>{submitted.id}</div>
+            <div style={{ fontSize: 12, color: C.success, marginTop: 6, fontWeight: 600 }}>STATUS: OPEN</div>
           </div>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-            <Btn onClick={() => navigate('/user/complaints')}>View My Complaints</Btn>
-            <Btn variant="secondary" onClick={() => navigate('/user')}>Back to Dashboard</Btn>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+            <button
+              onClick={() => navigate('/user/complaints')}
+              style={{ background: C.primary, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+            >View My Complaints</button>
+            <button
+              onClick={() => navigate('/user')}
+              style={{ background: C.bg, color: C.text, border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+            >Back to Dashboard</button>
           </div>
         </div>
       </div>
     );
   }
 
+  const urgencyConfig = {
+    low:      { bg: '#F0FDF4', border: '#86EFAC', color: '#16A34A', label: 'Low' },
+    medium:   { bg: '#F8FAFC', border: '#CBD5E1', color: '#475569', label: 'Medium' },
+    high:     { bg: '#FFFBEB', border: '#FDE68A', color: '#D97706', label: 'High' },
+    critical: { bg: '#FEF2F2', border: '#FECACA', color: '#DC2626', label: 'Critical' },
+  };
+
   return (
-    <div style={{ padding: '1.5rem 2rem', maxWidth: 760, margin: '0 auto' }}>
-      <PageHeader
-        title="Report a Problem"
-        subtitle="Submit a service issue or infrastructure concern in your area"
-        actions={<Btn small variant="secondary" onClick={() => navigate('/user')}>← Cancel</Btn>}
-      />
+    <div style={{ padding: '28px 32px', fontFamily: 'Inter, system-ui, sans-serif', color: C.text, maxWidth: 780 }}>
+      {/* Page header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, paddingBottom: 20, borderBottom: `1px solid ${C.border}` }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: C.text }}>Report a Problem</h1>
+          <p style={{ margin: '4px 0 0', fontSize: 13, color: C.muted }}>Submit a service issue or infrastructure concern in your area</p>
+        </div>
+        <button
+          onClick={() => navigate('/user')}
+          style={{ background: C.bg, color: C.text, border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+        >← Cancel</button>
+      </div>
 
       <form onSubmit={handleSubmit}>
-        <div style={{ ...glass, display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+        <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: 20 }}>
+
           {/* Location */}
           <div>
             <label style={labelStyle}>Location / Address *</label>
@@ -175,6 +174,8 @@ export default function ComplaintForm() {
               placeholder="e.g. 123 Main St, Houston North, or intersection of Oak Ave & 5th"
               required
               style={inputStyle}
+              onFocus={e => (e.target.style.borderColor = C.primary)}
+              onBlur={e => (e.target.style.borderColor = C.border)}
             />
           </div>
 
@@ -186,6 +187,8 @@ export default function ComplaintForm() {
               onChange={(e) => setProblemType(e.target.value)}
               required
               style={{ ...inputStyle, cursor: 'pointer' }}
+              onFocus={e => (e.target.style.borderColor = C.primary)}
+              onBlur={e => (e.target.style.borderColor = C.border)}
             >
               <option value="">Select problem type…</option>
               {PROBLEM_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -202,48 +205,34 @@ export default function ComplaintForm() {
               required
               rows={4}
               style={{ ...inputStyle, resize: 'vertical', minHeight: 100 }}
+              onFocus={e => (e.target.style.borderColor = C.primary)}
+              onBlur={e => (e.target.style.borderColor = C.border)}
             />
           </div>
 
           {/* Urgency */}
           <div>
             <label style={labelStyle}>Urgency Level *</label>
-            <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               {(['low', 'medium', 'high', 'critical'] as const).map((level) => {
-                const colors: Record<string, { bg: string; border: string; color: string }> = {
-                  low: { bg: 'rgba(74,222,128,0.08)', border: 'rgba(74,222,128,0.3)', color: '#4ade80' },
-                  medium: { bg: 'rgba(148,163,184,0.08)', border: 'rgba(148,163,184,0.3)', color: '#94a3b8' },
-                  high: { bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.3)', color: '#fbbf24' },
-                  critical: { bg: 'rgba(248,113,113,0.08)', border: 'rgba(248,113,113,0.3)', color: '#f87171' },
-                };
-                const c = colors[level];
+                const cfg = urgencyConfig[level];
                 const selected = urgency === level;
                 return (
                   <label
                     key={level}
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.4rem',
-                      padding: '0.5rem 1rem',
-                      borderRadius: 8,
-                      border: `1px solid ${selected ? c.border : 'rgba(51,65,85,0.4)'}`,
-                      background: selected ? c.bg : 'rgba(3,11,24,0.4)',
-                      color: selected ? c.color : '#64748b',
-                      cursor: 'pointer',
-                      fontSize: 13,
-                      fontWeight: selected ? 600 : 400,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      transition: 'all 0.15s',
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      padding: '8px 16px', borderRadius: 8,
+                      border: `1.5px solid ${selected ? cfg.border : C.border}`,
+                      background: selected ? cfg.bg : C.surface,
+                      color: selected ? cfg.color : C.muted,
+                      cursor: 'pointer', fontSize: 13, fontWeight: selected ? 700 : 400,
+                      textTransform: 'capitalize', transition: 'all 0.15s',
                     }}
                   >
                     <input
-                      type="radio"
-                      name="urgency"
-                      value={level}
-                      checked={selected}
-                      onChange={() => setUrgency(level)}
+                      type="radio" name="urgency" value={level}
+                      checked={selected} onChange={() => setUrgency(level)}
                       style={{ display: 'none' }}
                     />
                     {level}
@@ -256,50 +245,50 @@ export default function ComplaintForm() {
           {/* Photo upload */}
           <div>
             <label style={labelStyle}>
-              Photo (optional) —{' '}
-              <span style={{ color: '#475569', textTransform: 'none', letterSpacing: 0 }}>
-                Stored locally in your browser for this demo session
+              Photo (optional)
+              <span style={{ color: C.muted, textTransform: 'none', fontWeight: 400, letterSpacing: 0, marginLeft: 6 }}>
+                — Stored locally in your browser for this demo session
               </span>
             </label>
             <div
               onClick={() => fileRef.current?.click()}
               style={{
-                border: '2px dashed rgba(56,189,248,0.2)',
-                borderRadius: 9,
-                padding: '1.2rem',
-                textAlign: 'center',
-                color: '#475569',
-                fontSize: 13,
-                cursor: 'pointer',
+                border: `2px dashed ${C.border}`, borderRadius: 8,
+                padding: '20px', textAlign: 'center', color: C.muted,
+                fontSize: 13, cursor: 'pointer', transition: 'border-color 0.15s',
               }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = C.primary)}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = C.border)}
             >
               {photoB64 ? (
                 <div>
                   <img src={photoB64} alt="preview" style={{ maxHeight: 120, borderRadius: 6 }} />
-                  <div style={{ marginTop: 6, color: '#4ade80', fontSize: 12 }}>Photo attached ✓</div>
+                  <div style={{ marginTop: 8, color: C.success, fontSize: 12, fontWeight: 600 }}>Photo attached ✓</div>
                 </div>
               ) : (
-                <>Click to attach a photo</>
+                <>📎 Click to attach a photo</>
               )}
             </div>
             <input ref={fileRef} type="file" accept="image/*" onChange={handlePhoto} style={{ display: 'none' }} />
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, paddingTop: '0.5rem', borderTop: '1px solid rgba(56,189,248,0.08)' }}>
-            <Btn variant="secondary" onClick={() => navigate('/user')}>Cancel</Btn>
+          {/* Submit row */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, paddingTop: 8, borderTop: `1px solid ${C.border}` }}>
+            <button
+              type="button"
+              onClick={() => navigate('/user')}
+              style={{ background: C.bg, color: C.text, border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+            >Cancel</button>
             <button
               type="submit"
               disabled={submitting}
               style={{
-                background: submitting ? 'rgba(14,165,233,0.3)' : 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)',
-                border: 'none',
-                borderRadius: 9,
-                color: '#fff',
-                fontSize: 14,
-                fontWeight: 600,
-                padding: '0.65rem 1.8rem',
+                background: submitting ? '#93C5FD' : C.primary,
+                border: 'none', borderRadius: 8,
+                color: '#fff', fontSize: 14, fontWeight: 600,
+                padding: '10px 28px',
                 cursor: submitting ? 'default' : 'pointer',
-                letterSpacing: '0.03em',
+                transition: 'background 0.15s',
               }}
             >
               {submitting ? 'Submitting…' : 'Submit Complaint'}

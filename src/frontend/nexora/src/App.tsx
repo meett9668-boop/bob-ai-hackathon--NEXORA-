@@ -15,6 +15,7 @@ import { AlertsIncidentsPage } from "./pages/AlertsIncidents";
 import { AnalyticsPage as LegacyAnalyticsPage } from "./pages/Analytics";
 import Login from "./pages/Login";
 // User portal pages
+import UserLayout from "./pages/user/UserLayout";
 import UserDashboard from "./pages/user/UserDashboard";
 import UserTransformerView from "./pages/user/UserTransformerView";
 import ComplaintForm from "./pages/user/ComplaintForm";
@@ -197,13 +198,7 @@ function AppShell({ alertCount }: { alertCount: number }) {
           <Route path="/admin/crews"      element={<ProtectedRoute adminOnly><CrewManagement /></ProtectedRoute>} />
           <Route path="/admin/audit"      element={<ProtectedRoute adminOnly><AuditLog /></ProtectedRoute>} />
 
-          {/* ── User portal routes ───────────────────────────────────── */}
-          <Route path="/user"                      element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
-          <Route path="/user/transformer"           element={<ProtectedRoute><UserTransformerView /></ProtectedRoute>} />
-          <Route path="/user/complaints"            element={<ProtectedRoute><MyComplaints /></ProtectedRoute>} />
-          <Route path="/user/complaints/new"        element={<ProtectedRoute><ComplaintForm /></ProtectedRoute>} />
-          <Route path="/user/complaints/:id"        element={<ProtectedRoute><ComplaintDetail /></ProtectedRoute>} />
-          <Route path="/user/notifications"         element={<ProtectedRoute><UserNotifications /></ProtectedRoute>} />
+          {/* ── User portal routes — NOTE: handled by separate wrapper below ── */}
 
           <Route path="*" element={<AuthFallback />} />
         </Routes>
@@ -270,11 +265,37 @@ function AppInner() {
           <AppShell alertCount={alertCount} />
         </>
       } />
-      <Route path="/user/*" element={
-        <>
-          <NexoraBackground />
-          <AppShell alertCount={alertCount} />
-        </>
+
+      {/* ── User portal (light theme, UserLayout) ─────────────────────── */}
+      <Route path="/user" element={
+        <ProtectedRoute>
+          <UserLayout><UserDashboard /></UserLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/user/transformer" element={
+        <ProtectedRoute>
+          <UserLayout><UserTransformerView /></UserLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/user/complaints" element={
+        <ProtectedRoute>
+          <UserLayout><MyComplaints /></UserLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/user/complaints/new" element={
+        <ProtectedRoute>
+          <UserLayout><ComplaintForm /></UserLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/user/complaints/:id" element={
+        <ProtectedRoute>
+          <UserLayout><ComplaintDetail /></UserLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/user/notifications" element={
+        <ProtectedRoute>
+          <UserLayout><UserNotifications /></UserLayout>
+        </ProtectedRoute>
       } />
 
       {/* ── 404 ────────────────────────────────────────────────────────── */}

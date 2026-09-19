@@ -1,24 +1,26 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
-import { PageHeader } from '../../components/PageHeader';
-import { Btn } from '../../components/PageHeader';
 import { getNotificationsByUser, markNotificationRead, markAllNotificationsRead } from '../../store/nexoraStore';
 import type { NexoraNotification } from '../../types/extended';
 
-const TYPE_CONFIG: Record<string, { icon: string; color: string; bg: string }> = {
-  info:    { icon: 'ℹ️', color: '#38bdf8', bg: 'rgba(56,189,248,0.06)' },
-  warning: { icon: '⚠️', color: '#fbbf24', bg: 'rgba(251,191,36,0.06)' },
-  success: { icon: '✅', color: '#4ade80', bg: 'rgba(74,222,128,0.06)' },
-  danger:  { icon: '🚨', color: '#f87171', bg: 'rgba(248,113,113,0.06)' },
+const C = {
+  bg: '#F8FAFC',
+  surface: '#FFFFFF',
+  border: '#E2E8F0',
+  text: '#1E293B',
+  muted: '#64748B',
+  primary: '#3B82F6',
+  success: '#22C55E',
+  warning: '#F59E0B',
+  danger: '#EF4444',
 };
 
-const glass: React.CSSProperties = {
-  background: 'rgba(8,20,40,0.7)',
-  border: '1px solid rgba(56,189,248,0.12)',
-  borderRadius: 14,
-  backdropFilter: 'blur(10px)',
-  WebkitBackdropFilter: 'blur(10px)',
+const TYPE_CONFIG: Record<string, { icon: string; color: string; bg: string; border: string }> = {
+  info:    { icon: 'ℹ️', color: C.primary,  bg: '#EFF6FF', border: '#BFDBFE' },
+  warning: { icon: '⚠️', color: C.warning,  bg: '#FFFBEB', border: '#FDE68A' },
+  success: { icon: '✅', color: C.success,  bg: '#F0FDF4', border: '#BBF7D0' },
+  danger:  { icon: '🚨', color: C.danger,   bg: '#FEF2F2', border: '#FECACA' },
 };
 
 function timeAgo(iso: string): string {
@@ -61,69 +63,74 @@ export default function UserNotifications() {
   }
 
   return (
-    <div style={{ padding: '1.5rem 2rem', maxWidth: 800, margin: '0 auto' }}>
-      <PageHeader
-        title="Notifications"
-        subtitle={unread > 0 ? `${unread} unread notification${unread !== 1 ? 's' : ''}` : 'All caught up'}
-        actions={
-          <div style={{ display: 'flex', gap: 8 }}>
-            {unread > 0 && <Btn small variant="secondary" onClick={handleMarkAll}>Mark All Read</Btn>}
-            <Btn small variant="secondary" onClick={() => navigate('/user')}>← Dashboard</Btn>
-          </div>
-        }
-      />
+    <div style={{ padding: '28px 32px', fontFamily: 'Inter, system-ui, sans-serif', color: C.text, maxWidth: 820 }}>
+      {/* Page header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, paddingBottom: 20, borderBottom: `1px solid ${C.border}` }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: C.text }}>Notifications</h1>
+          <p style={{ margin: '4px 0 0', fontSize: 13, color: C.muted }}>
+            {unread > 0 ? `${unread} unread notification${unread !== 1 ? 's' : ''}` : 'All caught up'}
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {unread > 0 && (
+            <button
+              onClick={handleMarkAll}
+              style={{ background: C.bg, color: C.text, border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+            >Mark All Read</button>
+          )}
+          <button
+            onClick={() => navigate('/user')}
+            style={{ background: C.bg, color: C.text, border: `1px solid ${C.border}`, borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+          >← Dashboard</button>
+        </div>
+      </div>
 
       {notifications.length === 0 ? (
-        <div style={{ ...glass, padding: '3rem', textAlign: 'center' }}>
-          <div style={{ fontSize: 40, marginBottom: '1rem' }}>🔔</div>
-          <div style={{ fontSize: 16, fontWeight: 600, color: '#e2e8f0', marginBottom: '0.5rem' }}>No notifications</div>
-          <div style={{ fontSize: 13, color: '#64748b', marginBottom: '1.5rem' }}>
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: '48px 24px', textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+          <div style={{ fontSize: 40, marginBottom: 16 }}>🔔</div>
+          <div style={{ fontSize: 16, fontWeight: 600, color: C.text, marginBottom: 8 }}>No notifications</div>
+          <div style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>
             You&apos;ll receive updates here about your complaints and area incidents.
           </div>
-          <Btn variant="secondary" onClick={() => navigate('/user')}>Back to Dashboard</Btn>
+          <button
+            onClick={() => navigate('/user')}
+            style={{ background: C.bg, color: C.text, border: `1px solid ${C.border}`, borderRadius: 8, padding: '10px 24px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+          >Back to Dashboard</button>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {notifications.map((n) => {
             const cfg = TYPE_CONFIG[n.type] ?? TYPE_CONFIG.info;
             return (
               <div
                 key={n.id}
                 style={{
-                  ...glass,
-                  padding: '1rem 1.4rem',
-                  background: n.read ? 'rgba(8,20,40,0.5)' : cfg.bg,
-                  borderColor: n.read ? 'rgba(56,189,248,0.08)' : `rgba(${cfg.color === '#38bdf8' ? '56,189,248' : cfg.color === '#fbbf24' ? '251,191,36' : cfg.color === '#4ade80' ? '74,222,128' : '248,113,113'},0.25)`,
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '1rem',
-                  opacity: n.read ? 0.65 : 1,
+                  background: n.read ? C.surface : cfg.bg,
+                  border: `1px solid ${n.read ? C.border : cfg.border}`,
+                  borderRadius: 12, padding: '16px 20px',
+                  display: 'flex', alignItems: 'flex-start', gap: 14,
+                  opacity: n.read ? 0.75 : 1,
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                  transition: 'opacity 0.15s',
                 }}
               >
-                <div style={{ fontSize: 20, flexShrink: 0, lineHeight: 1 }}>{cfg.icon}</div>
+                <div style={{ fontSize: 20, flexShrink: 0, lineHeight: 1, marginTop: 1 }}>{cfg.icon}</div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, color: n.read ? '#64748b' : '#e2e8f0', lineHeight: 1.5, fontWeight: n.read ? 400 : 500 }}>
+                  <div style={{ fontSize: 14, color: n.read ? C.muted : C.text, lineHeight: 1.5, fontWeight: n.read ? 400 : 500 }}>
                     {n.message}
                   </div>
-                  <div style={{ fontSize: 11, color: '#475569', marginTop: 4 }}>{timeAgo(n.createdAt)}</div>
+                  <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>{timeAgo(n.createdAt)}</div>
                 </div>
                 {!n.read && (
                   <button
                     onClick={() => handleMarkRead(n.id)}
                     style={{
-                      background: 'rgba(56,189,248,0.1)',
-                      border: '1px solid rgba(56,189,248,0.2)',
-                      borderRadius: 6,
-                      color: '#38bdf8',
-                      fontSize: 11,
-                      padding: '0.25rem 0.7rem',
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                      flexShrink: 0,
+                      background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 6,
+                      color: C.primary, fontSize: 12, fontWeight: 600,
+                      padding: '4px 12px', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
                     }}
-                  >
-                    Mark Read
-                  </button>
+                  >Mark Read</button>
                 )}
               </div>
             );

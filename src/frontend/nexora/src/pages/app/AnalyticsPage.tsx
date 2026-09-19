@@ -81,35 +81,63 @@ const REGION_RISK = [
   { region: "Uttar Pradesh", risk: 11 },
 ];
 
+// Normalise a value that may be an object-map {key:count} or already an array [{name,value}]
+function toNameValue(raw: unknown, labelMap?: Record<string, string>): { name: string; value: number }[] {
+  if (Array.isArray(raw)) return raw as { name: string; value: number }[];
+  if (raw && typeof raw === "object") {
+    return Object.entries(raw as Record<string, number>).map(([k, v]) => ({
+      name: labelMap?.[k] ?? k.charAt(0).toUpperCase() + k.slice(1),
+      value: Number(v),
+    }));
+  }
+  return [];
+}
+
+const RISK_LABEL: Record<string, string> = {
+  critical: "Critical (>65%)", high: "Warning (45-65%)", medium: "Moderate (25-45%)", low: "Low (<25%)",
+};
+const HEALTH_LABEL: Record<string, string> = {
+  excellent: "Excellent", good: "Good", fair: "Fair", poor: "Poor",
+  healthy: "Healthy", warning: "Warning",
+};
+
 export default function AnalyticsPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [apiData, setApiData] = useState<Record<string, any> | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     fetchAnalytics()
-      .then(d => { setApiData(d); setLoading(false); })
-      .catch(() => { setApiData(null); setLoading(false); });
+      .then(d => { if (!cancelled) { setApiData(d); setLoading(false); } })
+      .catch(() => { if (!cancelled) { setApiData(null); setLoading(false); } });
+    return () => { cancelled = true; };
   }, []);
 
   // Use API data if available, otherwise fall back to static demo data
   const totalAssets = apiData?.total_assets ?? 10;
   const totalIncidents = apiData?.total_incidents ?? 39;
-  const customersAtRisk = apiData?.customers_at_risk ?? 247500;
+  const customersAtRisk = apiData?.total_customers_at_risk ?? apiData?.customers_at_risk ?? 247500;
   const avgRisk = apiData?.avg_risk_score ? Math.round(apiData.avg_risk_score * 100) : 36;
 
-  const riskDist: { name: string; value: number }[] = apiData?.risk_distribution ?? [
-    { name: "Critical (>65%)", value: 2 },
-    { name: "Warning (45-65%)", value: 3 },
-    { name: "Moderate (25-45%)", value: 2 },
-    { name: "Low (<25%)", value: 3 },
-  ];
+  const riskDist: { name: string; value: number }[] =
+    apiData?.risk_distribution
+      ? toNameValue(apiData.risk_distribution, RISK_LABEL)
+      : [
+          { name: "Critical (>65%)", value: 2 },
+          { name: "Warning (45-65%)", value: 3 },
+          { name: "Moderate (25-45%)", value: 2 },
+          { name: "Low (<25%)", value: 3 },
+        ];
 
-  const healthDist: { name: string; value: number }[] = apiData?.health_distribution ?? [
-    { name: "Healthy", value: 5 },
-    { name: "Warning", value: 3 },
-    { name: "Critical", value: 2 },
-  ];
+  const healthDist: { name: string; value: number }[] =
+    apiData?.health_distribution
+      ? toNameValue(apiData.health_distribution, HEALTH_LABEL)
+      : [
+          { name: "Healthy", value: 5 },
+          { name: "Warning", value: 3 },
+          { name: "Critical", value: 2 },
+        ];
 
   if (loading) {
     return (
