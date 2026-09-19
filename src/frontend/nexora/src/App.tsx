@@ -12,7 +12,7 @@ import { WeatherIntelligencePage } from "./pages/WeatherIntelligence";
 import { FailureAdvisorPage } from "./pages/FailureAdvisor";
 import { MaintenancePlannerPage } from "./pages/MaintenancePlanner";
 import { AlertsIncidentsPage } from "./pages/AlertsIncidents";
-import { AnalyticsPage } from "./pages/Analytics";
+import { AnalyticsPage as LegacyAnalyticsPage } from "./pages/Analytics";
 import Login from "./pages/Login";
 // User portal pages
 import UserDashboard from "./pages/user/UserDashboard";
@@ -40,6 +40,10 @@ import HowItWorksPage from "./pages/app/HowItWorksPage";
 import AboutPage from "./pages/app/AboutPage";
 import ContactPage from "./pages/app/ContactPage";
 import AIRecommendationsPage from "./pages/app/AIRecommendationsPage";
+import WeatherPage from "./pages/app/WeatherPage";
+import MaintenancePage from "./pages/app/MaintenancePage";
+import AnalyticsPage from "./pages/app/AnalyticsPage";
+import NotFoundPage from "./pages/app/NotFoundPage";
 import { fetchAlerts } from "./api/client";
 import { AppStoreProvider } from "./store/appStore";
 
@@ -135,13 +139,26 @@ function NexoraBackground() {
 
 /* ============================================================
    ProtectedRoute — redirects to /login if not authenticated
+   Uses a loading state to avoid redirect loops during initial auth check.
    adminOnly — redirects users to /user if they are not admin
    ============================================================ */
 function ProtectedRoute({ children, adminOnly = false }: { children: ReactNode; adminOnly?: boolean }) {
   const { user } = useAuth();
+  // Auth state is loaded synchronously from localStorage in AuthProvider,
+  // so if user is null here, they are genuinely unauthenticated.
   if (!user) return <Navigate to="/login" replace />;
   if (adminOnly && user.role !== "admin") return <Navigate to="/user" replace />;
   return <>{children}</>;
+}
+
+/* ============================================================
+   LoginRoute — redirect already-authenticated users away from /login
+   Prevents the /login ↔ /dashboard loop.
+   ============================================================ */
+function LoginRoute() {
+  const { user } = useAuth();
+  if (user) return <Navigate to={user.role === "admin" ? "/dashboard" : "/user"} replace />;
+  return <Login />;
 }
 
 /* ============================================================
@@ -174,7 +191,7 @@ function AppShell({ alertCount }: { alertCount: number }) {
           <Route path="/admin/advisor"    element={<ProtectedRoute adminOnly><FailureAdvisorPage /></ProtectedRoute>} />
           <Route path="/admin/maintenance" element={<ProtectedRoute adminOnly><MaintenancePlannerPage /></ProtectedRoute>} />
           <Route path="/admin/alerts"     element={<ProtectedRoute adminOnly><AlertsIncidentsPage /></ProtectedRoute>} />
-          <Route path="/admin/analytics"  element={<ProtectedRoute adminOnly><AnalyticsPage /></ProtectedRoute>} />
+          <Route path="/admin/analytics"  element={<ProtectedRoute adminOnly><LegacyAnalyticsPage /></ProtectedRoute>} />
           <Route path="/admin/incidents"  element={<ProtectedRoute adminOnly><IncidentResponse /></ProtectedRoute>} />
           <Route path="/admin/complaints" element={<ProtectedRoute adminOnly><ComplaintManagement /></ProtectedRoute>} />
           <Route path="/admin/crews"      element={<ProtectedRoute adminOnly><CrewManagement /></ProtectedRoute>} />
@@ -222,34 +239,46 @@ function AppInner() {
     <Routes>
       {/* ── Public routes ─────────────────────────────────────────────── */}
       <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<Login />} />
+      {/* LoginRoute prevents /login → /dashboard → /login loop */}
+      <Route path="/login" element={<LoginRoute />} />
       <Route path="/how-it-works" element={<AppLayout><HowItWorksPage /></AppLayout>} />
       <Route path="/about" element={<AppLayout><AboutPage /></AppLayout>} />
       <Route path="/contact" element={<AppLayout><ContactPage /></AppLayout>} />
 
-      {/* ── New enterprise dashboard routes (protected) ───────────────── */}
-      <Route path="/dashboard" element={<ProtectedRoute><AppLayout><Dashboard /></AppLayout></ProtectedRoute>} />
-      <Route path="/equipment" element={<ProtectedRoute><AppLayout><EquipmentPage /></AppLayout></ProtectedRoute>} />
+      {/* ── Enterprise dashboard routes (protected) ───────────────────── */}
+      <Route path="/dashboard"    element={<ProtectedRoute><AppLayout><Dashboard /></AppLayout></ProtectedRoute>} />
+      <Route path="/equipment"    element={<ProtectedRoute><AppLayout><EquipmentPage /></AppLayout></ProtectedRoute>} />
       <Route path="/equipment/:id" element={<ProtectedRoute><AppLayout><PredictionDetails /></AppLayout></ProtectedRoute>} />
-      {/* Canonical routes (sidebar links) */}
-      <Route path="/predictions" element={<ProtectedRoute><AppLayout><PredictionDetails /></AppLayout></ProtectedRoute>} />
-      <Route path="/alerts" element={<ProtectedRoute><AppLayout><AlertsPage /></AppLayout></ProtectedRoute>} />
-      <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
-      {/* Legacy aliases — keep for backward compatibility */}
-      <Route path="/predictions-view" element={<ProtectedRoute><AppLayout><PredictionDetails /></AppLayout></ProtectedRoute>} />
-      <Route path="/alerts-view" element={<ProtectedRoute><AppLayout><AlertsPage /></AppLayout></ProtectedRoute>} />
-      <Route path="/settings-view" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
-      <Route path="/reports" element={<ProtectedRoute><AppLayout><ReportsPage /></AppLayout></ProtectedRoute>} />
-      <Route path="/maps" element={<ProtectedRoute><AppLayout><MapsPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/predictions"  element={<ProtectedRoute><AppLayout><PredictionDetails /></AppLayout></ProtectedRoute>} />
+      <Route path="/alerts"       element={<ProtectedRoute><AppLayout><AlertsPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/weather"      element={<ProtectedRoute><AppLayout><WeatherPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/maintenance"  element={<ProtectedRoute><AppLayout><MaintenancePage /></AppLayout></ProtectedRoute>} />
+      <Route path="/analytics"    element={<ProtectedRoute><AppLayout><AnalyticsPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/reports"      element={<ProtectedRoute><AppLayout><ReportsPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/maps"         element={<ProtectedRoute><AppLayout><MapsPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/settings"     element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
       <Route path="/ai-recommendations" element={<ProtectedRoute><AppLayout><AIRecommendationsPage /></AppLayout></ProtectedRoute>} />
+      {/* Legacy aliases */}
+      <Route path="/predictions-view" element={<ProtectedRoute><AppLayout><PredictionDetails /></AppLayout></ProtectedRoute>} />
+      <Route path="/alerts-view"      element={<ProtectedRoute><AppLayout><AlertsPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/settings-view"    element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
 
       {/* ── Dark-theme admin shell (legacy pages at /admin/*) ─────────── */}
-      <Route path="*" element={
+      <Route path="/admin/*" element={
         <>
           <NexoraBackground />
           <AppShell alertCount={alertCount} />
         </>
       } />
+      <Route path="/user/*" element={
+        <>
+          <NexoraBackground />
+          <AppShell alertCount={alertCount} />
+        </>
+      } />
+
+      {/* ── 404 ────────────────────────────────────────────────────────── */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }

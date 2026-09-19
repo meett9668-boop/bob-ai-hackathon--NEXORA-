@@ -202,29 +202,33 @@ export default function Dashboard() {
       </div>
 
       {/* Row 3: Recent Alerts + Live Map */}
-      <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 20, marginBottom: 24 }}>
         {/* Recent Alerts */}
         <Card style={{ padding: 24 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <h2 style={{ fontSize: 16, fontWeight: 700, color: C.text, margin: 0 }}>Recent Alerts</h2>
             <button
               onClick={() => navigate("/alerts")}
-              style={{
-                background: "transparent", border: "none", cursor: "pointer",
-                color: C.primary, fontSize: 13, fontWeight: 600,
-                padding: 0,
-              }}
+              style={{ background: "transparent", border: "none", cursor: "pointer", color: C.primary, fontSize: 13, fontWeight: 600, padding: 0 }}
             >
               View All →
             </button>
           </div>
           <div>
             {RECENT_ALERTS.map((a, i) => (
-              <div key={a.id} style={{
-                display: "flex", alignItems: "flex-start", gap: 12, paddingBottom: 14,
-                borderBottom: i < RECENT_ALERTS.length - 1 ? `1px solid ${C.border}` : "none",
-                marginBottom: i < RECENT_ALERTS.length - 1 ? 14 : 0,
-              }}>
+              <div
+                key={a.id}
+                onClick={() => navigate(`/equipment/${a.equipment.split(" ").pop()}`)}
+                style={{
+                  display: "flex", alignItems: "flex-start", gap: 12, paddingBottom: 14,
+                  borderBottom: i < RECENT_ALERTS.length - 1 ? `1px solid ${C.border}` : "none",
+                  marginBottom: i < RECENT_ALERTS.length - 1 ? 14 : 0,
+                  cursor: "pointer", borderRadius: 8, padding: "8px",
+                  transition: "background 0.12s",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = C.bg)}
+                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+              >
                 <span style={{
                   padding: "2px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700,
                   background: a.severity === "Critical" ? "rgba(239,68,68,0.1)" : "rgba(245,158,11,0.1)",
@@ -311,6 +315,35 @@ export default function Dashboard() {
           </button>
         </Card>
       </div>
+
+      {/* Row 4: Weather Intelligence Card */}
+      <Card
+        style={{ padding: 24, cursor: "pointer", transition: "box-shadow 0.15s" }}
+        onClick={() => navigate("/weather")}
+        onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => (e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.1)")}
+        onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => (e.currentTarget.style.boxShadow = C.cardShadow)}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: C.text, margin: 0 }}>⛈️ Weather Intelligence</h2>
+          <span style={{ background: "rgba(239,68,68,0.1)", color: C.danger, borderRadius: 20, padding: "3px 10px", fontSize: 11, fontWeight: 700 }}>HIGH RISK</span>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12 }}>
+          {[
+            { label: "Current", value: "34°C · ⛈️ Storm", color: C.warning },
+            { label: "Storm Probability", value: "78%", color: C.danger },
+            { label: "Wind Speed", value: "28 km/h SW", color: C.warning },
+            { label: "Affected Assets", value: "6 assets", color: C.danger },
+          ].map(item => (
+            <div key={item.label} style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, padding: "10px 14px" }}>
+              <div style={{ fontSize: 11, color: C.muted, marginBottom: 4 }}>{item.label}</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: item.color }}>{item.value}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 12, fontSize: 13, color: C.primary, fontWeight: 600 }}>
+          View Weather Intelligence →
+        </div>
+      </Card>
     </div>
   );
 }

@@ -5,16 +5,20 @@ import { useAppStore } from "../../store/appStore";
 import {
   LayoutDashboard, Cpu, TrendingUp, Bell, FileText, Map, Settings,
   LogOut, Search, ChevronLeft, ChevronRight, X, CheckCheck,
+  Cloud, Wrench, BarChart2,
 } from "lucide-react";
 
 const NAV_ITEMS = [
-  { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-  { label: "Equipment", icon: Cpu, path: "/equipment" },
-  { label: "Predictions", icon: TrendingUp, path: "/predictions" },
-  { label: "Alerts", icon: Bell, path: "/alerts" },
-  { label: "Reports", icon: FileText, path: "/reports" },
-  { label: "Maps", icon: Map, path: "/maps" },
-  { label: "Settings", icon: Settings, path: "/settings" },
+  { label: "Dashboard",   icon: LayoutDashboard, path: "/dashboard" },
+  { label: "Equipment",   icon: Cpu,             path: "/equipment" },
+  { label: "Predictions", icon: TrendingUp,      path: "/predictions" },
+  { label: "Alerts",      icon: Bell,            path: "/alerts" },
+  { label: "Weather",     icon: Cloud,           path: "/weather" },
+  { label: "Maintenance", icon: Wrench,          path: "/maintenance" },
+  { label: "Analytics",   icon: BarChart2,       path: "/analytics" },
+  { label: "Reports",     icon: FileText,        path: "/reports" },
+  { label: "Maps",        icon: Map,             path: "/maps" },
+  { label: "Settings",    icon: Settings,        path: "/settings" },
 ];
 
 const C = {
