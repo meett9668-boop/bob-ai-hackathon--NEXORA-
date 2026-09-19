@@ -116,6 +116,21 @@ const FILTER_TABS = ["All", "High", "Medium", "Low", "Completed"];
 export default function AIRecommendationsPage() {
   const [activeTab, setActiveTab] = useState("All");
   const [items, setItems] = useState(RECOMMENDATIONS);
+  const [actionModal, setActionModal] = useState<{ title: string; message: string } | null>(null);
+
+  function handleAction(r: typeof RECOMMENDATIONS[0]) {
+    const messages: Record<string, string> = {
+      "Schedule": `Maintenance for ${r.equipment} has been scheduled. A service ticket has been created and assigned to Team A.`,
+      "View Plan": `Load redistribution plan for ${r.equipment}: Shift 15% load to adjacent substation. Estimated completion: 2 hours.`,
+      "Set Alert": `Enhanced monitoring enabled for ${r.equipment}. Sampling frequency increased to every 5 minutes for 7 days.`,
+      "View Details": `Upgrade assessment for ${r.equipment} added to the long-term planning queue. Review in 6 months.`,
+      "Open Form": `Maintenance record form opened for ${r.equipment}. Please complete and submit.`,
+    };
+    setActionModal({
+      title: r.title,
+      message: messages[r.action] ?? `Action "${r.action}" triggered for ${r.equipment}.`,
+    });
+  }
 
   function markDone(id: number) {
     setItems(prev => prev.map(r => r.id === id ? { ...r, done: true } : r));
@@ -245,13 +260,15 @@ export default function AIRecommendationsPage() {
             <div style={{ display: "flex", gap: 10, flexShrink: 0 }}>
               {!r.done && (
                 <>
-                  <button style={{
-                    background: r.primary ? C.primary : C.surface,
-                    color: r.primary ? "#fff" : C.text,
-                    border: `1px solid ${r.primary ? C.primary : C.border}`,
-                    borderRadius: 8, padding: "9px 18px", fontSize: 13, fontWeight: 600,
-                    cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.15s",
-                  }}
+                  <button
+                    onClick={() => handleAction(r)}
+                    style={{
+                      background: r.primary ? C.primary : C.surface,
+                      color: r.primary ? "#fff" : C.text,
+                      border: `1px solid ${r.primary ? C.primary : C.border}`,
+                      borderRadius: 8, padding: "9px 18px", fontSize: 13, fontWeight: 600,
+                      cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.15s",
+                    }}
                     onMouseEnter={e => { if (!r.primary) { (e.currentTarget as HTMLButtonElement).style.borderColor = C.primary; (e.currentTarget as HTMLButtonElement).style.color = C.primary; } else { (e.currentTarget as HTMLButtonElement).style.background = "#1d4ed8"; } }}
                     onMouseLeave={e => { if (!r.primary) { (e.currentTarget as HTMLButtonElement).style.borderColor = C.border; (e.currentTarget as HTMLButtonElement).style.color = C.text; } else { (e.currentTarget as HTMLButtonElement).style.background = C.primary; } }}
                   >
@@ -284,6 +301,32 @@ export default function AIRecommendationsPage() {
           </div>
         ))}
       </div>
+
+      {/* Action confirmation modal */}
+      {actionModal && (
+        <div style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)",
+          zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+        }} onClick={() => setActionModal(null)}>
+          <div style={{
+            background: C.surface, borderRadius: 14, padding: 28, maxWidth: 420, width: "100%",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.18)",
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(34,197,94,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ fontSize: 18 }}>✓</span>
+              </div>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: C.text, margin: 0 }}>Action Triggered</h3>
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: C.primary, marginBottom: 8 }}>{actionModal.title}</div>
+            <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.6, margin: "0 0 20px" }}>{actionModal.message}</p>
+            <button onClick={() => setActionModal(null)} style={{
+              width: "100%", height: 40, background: C.primary, color: "#fff", border: "none",
+              borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer",
+            }}>OK</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

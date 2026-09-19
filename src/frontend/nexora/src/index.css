@@ -178,8 +178,75 @@ input  { font-family: inherit; }
   outline-offset: 2px;
 }
 
-/* Select/input base override */
-select, input[type="text"], input[type="email"], input[type="password"] {
+/* ============================================================
+   SELECT / INPUT — CONTRAST FIX
+   The global dark-surface variables must not bleed into the
+   enterprise light-theme pages. Select options are always
+   rendered by the OS/browser using their own popup, so they
+   inherit the element's background and color. We set safe
+   neutral defaults here that work on both dark legacy pages
+   and white enterprise pages via inline-style overrides.
+   ============================================================ */
+
+/* Legacy dark pages (admin shell) — keep dark-theme selects */
+.nx-glass select,
+.nx-card  select,
+[style*="background: var(--nx-"] select,
+[style*="background:var(--nx-"] select {
+  background: var(--nx-surface-2);
+  border: 1px solid var(--nx-border);
+  color: var(--nx-text);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+
+/* ALL selects — ensure options are always readable.
+   Option elements cannot be styled cross-browser reliably,
+   but setting the correct background/color on the <select>
+   element tells the browser to use a matching color scheme. */
+select {
+  color-scheme: light dark;  /* let browser pick appropriate */
+}
+
+/* When a select has an explicit light background (enterprise pages use inline styles),
+   force the option dropdown to be light too so text is visible. */
+select[style*="background: #fff"],
+select[style*="background:#fff"],
+select[style*="background: white"],
+select[style*="background: rgb(255"],
+select[style*="background: #F8FAFC"],
+select[style*="background: #FFFFFF"],
+select[style*="background:#FFFFFF"],
+select[style*="background:#F8FAFC"] {
+  color-scheme: light;
+  color: #1E293B;
+  background: #ffffff;
+}
+
+select[style*="background: #fff"] option,
+select[style*="background:#fff"] option,
+select[style*="background: white"] option,
+select[style*="background: rgb(255"] option,
+select[style*="background: #F8FAFC"] option,
+select[style*="background: #FFFFFF"] option,
+select[style*="background:#FFFFFF"] option,
+select[style*="background:#F8FAFC"] option {
+  background: #ffffff;
+  color: #1E293B;
+}
+
+/* Inputs on enterprise (light) pages use inline styles and override naturally.
+   This rule only applies on the legacy dark admin pages. */
+.nx-glass input[type="text"],
+.nx-glass input[type="email"],
+.nx-glass input[type="password"],
+.nx-glass input[type="number"],
+.nx-card  input[type="text"],
+.nx-card  input[type="email"],
+.nx-card  input[type="password"] {
   background: var(--nx-surface);
   border: 1px solid var(--nx-border);
   color: var(--nx-text);
@@ -189,8 +256,24 @@ select, input[type="text"], input[type="email"], input[type="password"] {
   transition: border-color 0.2s, box-shadow 0.2s;
   outline: none;
 }
-select:focus, input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus {
+
+.nx-glass select:focus,
+.nx-card select:focus,
+.nx-glass input:focus,
+.nx-card input:focus {
   border-color: var(--nx-primary);
   box-shadow: 0 0 0 3px var(--nx-primary-glow);
 }
-select option { background: var(--nx-surface-2); }
+
+.nx-glass select option,
+.nx-card select option {
+  background: var(--nx-surface-2);
+  color: var(--nx-text);
+}
+
+/* Focus ring for enterprise inputs (inherit from inline styles — just add glow) */
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid #3B82F6;
+  outline-offset: 1px;
+}

@@ -1,4 +1,4 @@
-﻿"""
+"""
 NEXORA FastAPI Backend - Full Production API
 ============================================
 Serves the React frontend + all REST API endpoints.
@@ -16,6 +16,14 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+
+# ── Google auth (optional — only active when GOOGLE_CLIENT_ID is set) ─────────
+try:
+    from google.oauth2 import id_token as google_id_token
+    from google.auth.transport import requests as google_requests
+    _GOOGLE_AUTH_AVAILABLE = True
+except ImportError:
+    _GOOGLE_AUTH_AVAILABLE = False
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 if _HERE not in sys.path:
@@ -91,12 +99,75 @@ class MaintenanceStatusUpdate(BaseModel):
     notes: Optional[str] = None
 
 
+# ── Google Auth Pydantic Model ─────────────────────────────────────────────────
+class GoogleCredentialRequest(BaseModel):
+    credential: str
+
+
 # ══════════════════════════════════════════════════════════════════════
 # HEALTH
 # ══════════════════════════════════════════════════════════════════════
 @app.get("/api/health")
 def health():
     return {"status":"ok","service":"NEXORA Backend v2","synthetic_data":True}
+
+
+# ══════════════════════════════════════════════════════════════════════
+# GOOGLE AUTHENTICATION
+# ══════════════════════════════════════════════════════════════════════
+@app.post("/api/auth/google")
+def google_auth(body: GoogleCredentialRequest):
+    """
+    Verify a Google Identity Services credential (ID token) server-side.
+    Returns a NEXORA user object on success.
+
+    Requires:
+        GOOGLE_CLIENT_ID environment variable (backend)
+    Optional:
+        google-auth library: pip install google-auth
+    """
+    GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
+    if not GOOGLE_CLIENT_ID:
+        raise HTTPException(
+            status_code=503,
+            detail="Google authentication is not configured on the server. Set GOOGLE_CLIENT_ID in the backend environment."
+        )
+    if not _GOOGLE_AUTH_AVAILABLE:
+        raise HTTPException(
+            status_code=503,
+            detail="google-auth library is not installed. Run: pip install google-auth"
+        )
+    try:
+        idinfo = google_id_token.verify_oauth2_token(
+            body.credential,
+            google_requests.Request(),
+            GOOGLE_CLIENT_ID,
+            clock_skew_in_seconds=10,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=401, detail=f"Invalid Google token: {exc}")
+
+    # Extract verified identity (never trust unverified claims)
+    google_sub = idinfo["sub"]          # stable, unique Google user ID
+    email = idinfo.get("email", "")
+    name = idinfo.get("name") or (email.split("@")[0] if email else "User")
+    photo_url = idinfo.get("picture")
+    initials = "".join(p[0].upper() for p in name.split()[:2]) or "GU"
+
+    # Build a NEXORA user object.
+    # Role defaults to "user" — do NOT infer role from Google profile.
+    # A real production system would look up the user in a database here.
+    nexora_user = {
+        "id": f"google-{google_sub}",
+        "googleSub": google_sub,
+        "name": name,
+        "email": email,
+        "role": "user",       # safe default; upgrade via admin panel
+        "avatar": initials,
+        "photoUrl": photo_url,
+        "loginMethod": "google",
+    }
+    return {"user": nexora_user}
 
 
 # ══════════════════════════════════════════════════════════════════════

@@ -41,6 +41,7 @@ import AboutPage from "./pages/app/AboutPage";
 import ContactPage from "./pages/app/ContactPage";
 import AIRecommendationsPage from "./pages/app/AIRecommendationsPage";
 import { fetchAlerts } from "./api/client";
+import { AppStoreProvider } from "./store/appStore";
 
 /* ============================================================
    NEXORA Background — cinematic dark navy ambient system
@@ -230,11 +231,16 @@ function AppInner() {
       <Route path="/dashboard" element={<ProtectedRoute><AppLayout><Dashboard /></AppLayout></ProtectedRoute>} />
       <Route path="/equipment" element={<ProtectedRoute><AppLayout><EquipmentPage /></AppLayout></ProtectedRoute>} />
       <Route path="/equipment/:id" element={<ProtectedRoute><AppLayout><PredictionDetails /></AppLayout></ProtectedRoute>} />
+      {/* Canonical routes (sidebar links) */}
+      <Route path="/predictions" element={<ProtectedRoute><AppLayout><PredictionDetails /></AppLayout></ProtectedRoute>} />
+      <Route path="/alerts" element={<ProtectedRoute><AppLayout><AlertsPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
+      {/* Legacy aliases — keep for backward compatibility */}
       <Route path="/predictions-view" element={<ProtectedRoute><AppLayout><PredictionDetails /></AppLayout></ProtectedRoute>} />
       <Route path="/alerts-view" element={<ProtectedRoute><AppLayout><AlertsPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/settings-view" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute><AppLayout><ReportsPage /></AppLayout></ProtectedRoute>} />
       <Route path="/maps" element={<ProtectedRoute><AppLayout><MapsPage /></AppLayout></ProtectedRoute>} />
-      <Route path="/settings-view" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
       <Route path="/ai-recommendations" element={<ProtectedRoute><AppLayout><AIRecommendationsPage /></AppLayout></ProtectedRoute>} />
 
       {/* ── Dark-theme admin shell (legacy pages at /admin/*) ─────────── */}
@@ -252,7 +258,9 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppInner />
+        <AppStoreProvider>
+          <AppInner />
+        </AppStoreProvider>
       </AuthProvider>
     </BrowserRouter>
   );

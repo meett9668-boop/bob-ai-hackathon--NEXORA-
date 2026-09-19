@@ -71,6 +71,7 @@ export default function PredictionDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("Prediction");
+  const [actionMsg, setActionMsg] = useState<string | null>(null);
   const equipId = id ?? "T-104";
 
   return (
@@ -333,13 +334,23 @@ export default function PredictionDetails() {
                       <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{r.title}</div>
                       <div style={{ fontSize: 13, color: C.muted, marginTop: 2 }}>{r.desc}</div>
                     </div>
-                    <button style={{
-                      background: r.primary ? C.primary : C.surface,
-                      color: r.primary ? "#fff" : C.text,
-                      border: `1px solid ${r.primary ? C.primary : C.border}`,
-                      borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 600,
-                      cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.15s",
-                    }}>
+                    <button
+                      onClick={() => {
+                        const msgs: Record<string, string> = {
+                          "Schedule": "Thermal inspection scheduled for T-104. Service ticket #MNT-2025-447 created.",
+                          "View Plan": "Load redistribution plan opened: Shift 15% load to Substation B.",
+                          "Set Alert": "Enhanced monitoring enabled. Sampling every 5 min for 7 days.",
+                          "View Details": "Long-term upgrade for T-104 added to capital planning queue.",
+                        };
+                        setActionMsg(msgs[r.action] ?? `Action "${r.action}" triggered for ${equipId}.`);
+                      }}
+                      style={{
+                        background: r.primary ? C.primary : C.surface,
+                        color: r.primary ? "#fff" : C.text,
+                        border: `1px solid ${r.primary ? C.primary : C.border}`,
+                        borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 600,
+                        cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.15s",
+                      }}>
                       {r.action}
                     </button>
                   </div>
@@ -349,6 +360,26 @@ export default function PredictionDetails() {
           </div>
         </div>
       </div>
+
+      {actionMsg && (
+        <div style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)",
+          zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+        }} onClick={() => setActionMsg(null)}>
+          <div style={{
+            background: C.surface, borderRadius: 14, padding: 28, maxWidth: 400, width: "100%",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.18)",
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ fontSize: 22, marginBottom: 12 }}>✓</div>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: C.text, margin: "0 0 10px" }}>Action Confirmed</h3>
+            <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.6, margin: "0 0 20px" }}>{actionMsg}</p>
+            <button onClick={() => setActionMsg(null)} style={{
+              width: "100%", height: 40, background: C.primary, color: "#fff", border: "none",
+              borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer",
+            }}>OK</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

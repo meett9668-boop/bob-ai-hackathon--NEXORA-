@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const NAV_LINKS = ["Home", "Features", "How It Works", "About", "Contact"];
@@ -106,6 +107,7 @@ const STATS = [
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const [demoModal, setDemoModal] = useState(false);
 
   return (
     <div style={{ minHeight: "100vh", background: "#060e1e", fontFamily: "Inter, system-ui, sans-serif", color: "#f1f5f9" }}>
@@ -131,15 +133,24 @@ export default function LandingPage() {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
           {NAV_LINKS.map(link => (
-            <a
+            <button
               key={link}
-              href={link === "Home" ? "/" : `/${link.toLowerCase().replace(/\s+/g, "-")}`}
-              style={{ color: "#94a3b8", fontSize: 14, textDecoration: "none", transition: "color 0.2s" }}
+              onClick={() => {
+                if (link === "Home") navigate("/");
+                else if (link === "Features") document.getElementById("features-section")?.scrollIntoView({ behavior: "smooth" });
+                else if (link === "How It Works") navigate("/how-it-works");
+                else if (link === "About") navigate("/about");
+                else if (link === "Contact") navigate("/contact");
+              }}
+              style={{
+                background: "transparent", border: "none", cursor: "pointer",
+                color: "#94a3b8", fontSize: 14, transition: "color 0.2s",
+              }}
               onMouseEnter={e => (e.currentTarget.style.color = "#f1f5f9")}
               onMouseLeave={e => (e.currentTarget.style.color = "#94a3b8")}
             >
               {link}
-            </a>
+            </button>
           ))}
           <button
             onClick={() => navigate("/login")}
@@ -226,6 +237,7 @@ export default function LandingPage() {
             Get Started →
           </button>
           <button
+            onClick={() => setDemoModal(true)}
             style={{
               background: "transparent", color: "#f1f5f9",
               border: "1px solid rgba(241,245,249,0.2)",
@@ -240,8 +252,49 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Demo modal */}
+      {demoModal && (
+        <div style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)",
+          zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+        }} onClick={() => setDemoModal(false)}>
+          <div style={{
+            background: "#0b1a2e", borderRadius: 16, padding: 36, maxWidth: 480, width: "100%",
+            border: "1px solid rgba(56,189,248,0.2)", boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ textAlign: "center", marginBottom: 24 }}>
+              <div style={{
+                width: 56, height: 56, borderRadius: "50%",
+                background: "linear-gradient(135deg,#2563eb,#38bdf8)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                margin: "0 auto 16px", fontSize: 24,
+              }}>▶</div>
+              <h2 style={{ color: "#f1f5f9", fontSize: 20, fontWeight: 700, margin: "0 0 8px" }}>NEXORA Platform Demo</h2>
+              <p style={{ color: "#94a3b8", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+                Experience NEXORA's AI-powered grid intelligence platform. Log in with the demo account to explore all features — real-time monitoring, failure prediction, equipment management, and India grid maps.
+              </p>
+            </div>
+            <div style={{ background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,189,248,0.15)", borderRadius: 8, padding: "12px 16px", marginBottom: 20, fontSize: 13, color: "#93c5fd" }}>
+              <strong>Demo credentials:</strong><br />
+              Email: admin@nexora.com<br />
+              Password: admin123
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => setDemoModal(false)} style={{
+                flex: 1, height: 44, background: "transparent", color: "#94a3b8",
+                border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer",
+              }}>Close</button>
+              <button onClick={() => { setDemoModal(false); navigate("/login"); }} style={{
+                flex: 2, height: 44, background: "#2563eb", color: "#fff",
+                border: "none", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer",
+              }}>Go to Login →</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── FEATURE CARDS ───────────────────────────────────────────────── */}
-      <section style={{
+      <section id="features-section" style={{
         background: "#0a1628",
         padding: "80px 24px",
         borderTop: "1px solid rgba(56,189,248,0.08)",
