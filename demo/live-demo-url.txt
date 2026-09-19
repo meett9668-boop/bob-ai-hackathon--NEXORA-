@@ -1,4 +1,1 @@
-https://nexora-grid-intelligence.vercel.app
-
-This is the public Vercel deployment of NEXORA.
-Judges can access the demo directly through the URL above.
+open in local host 
